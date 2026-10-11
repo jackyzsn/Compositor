@@ -180,7 +180,7 @@ struct ContentView: View {
                     .disabled(session.isImporting || session.showsBusy || session.levels != nil)
                     .modifier(NewProjectDropTarget(workspace: applicationDelegate?.workspace))
             }
-            ToolbarSpacer(.fixed, placement: .navigation)
+            if #available(macOS 26.0, *) { ToolbarSpacer(.fixed, placement: .navigation) }
             if let workspace = applicationDelegate?.workspace {
                 ToolbarItem(placement: .navigation) {
                     ProjectTabStrip(workspace: workspace)
@@ -189,11 +189,11 @@ struct ContentView: View {
                         // strip scrolls instead.
                         .frame(width: max(200, windowWidth - 352), height: 34, alignment: .center)
                 }
-                .sharedBackgroundVisibility(.hidden)
+                .hidingSharedBackground()
             }
             // Absorb all remaining navigation-toolbar width before the zoom controls.
             // Without this spacer, the growing tab strip pushes the primary actions left.
-            ToolbarSpacer(.flexible, placement: .navigation)
+            if #available(macOS 26.0, *) { ToolbarSpacer(.flexible, placement: .navigation) }
             ToolbarItem(placement: .primaryAction) {
                 Button("Fit") { session.fit() }.help("Fit canvas in window (⌘0)")
                     .accessibilityIdentifier("fitCanvas").disabled(session.document == nil)
@@ -384,6 +384,13 @@ private struct PanelResizeEdge: View {
                     .onEnded { _ in startWidth = nil })
                 .help("Drag to resize the panel")
         }
+    }
+}
+
+extension ToolbarContent {
+    /// Drops the shared glass background macOS 26 draws behind a toolbar item; earlier systems have none.
+    @ToolbarContentBuilder func hidingSharedBackground() -> some ToolbarContent {
+        if #available(macOS 26.0, *) { sharedBackgroundVisibility(.hidden) } else { self }
     }
 }
 
